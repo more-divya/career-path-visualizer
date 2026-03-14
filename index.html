@@ -1,0 +1,570 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+<meta charset="utf-8" /> 
+<meta name="viewport" content="width=device-width,initial-scale=1" /> 
+<title>Career Path Visualizer — Multi-Domain</title> 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet"> 
+<style> 
+  :root{ 
+    --bg: #f5f9ff; 
+    --card: #ffffff; 
+    --text: #1f2937; 
+    --accent: #2b6cb0; 
+    --muted: #6b7280; 
+    --glass: rgba(255,255,255,0.6); 
+  } 
+  body.dark { 
+    --bg: #0f1724; 
+    --card: #0b1220; 
+    --text: #e6eef8; 
+    --accent: #63b3ed; 
+    --muted: #9aa8bd; 
+    --glass: rgba(255,255,255,0.04); 
+  } 
+   *{box-sizing:border-box} 
+  body{ 
+    margin:0; 
+    font-family:"Poppins",sans-serif; 
+    background:linear-gradient(180deg,var(--bg),#e8f1ff 60%); 
+    color:var(--text); 
+    -webkit-font-smoothing:antialiased; 
+    -moz-osx-font-smoothing:grayscale; 
+  } 
+ 
+  header{ 
+    position:sticky; 
+    top:0; 
+    z-index:30; 
+    background:var(--card); 
+    backdrop-filter: blur(6px); 
+    box-shadow:0 2px 8px rgba(15,23,42,0.05); 
+    padding:14px 20px; 
+    display:flex; 
+    align-items:center; 
+    gap:16px; 
+  } 
+  .brand { 
+    display:flex; 
+    gap:12px; 
+    align-items:center; 
+  } 
+  .logo { 
+    width:46px;height:46px;border-radius:10px; 
+    background:linear-gradient(135deg,var(--accent),#5aa0e6); 
+    display:flex;align-items:center;justify-content:center;color:white;font-weight:700; 
+    box-shadow:0 6px 18px rgba(43,108,176,0.18); 
+  } 
+  h1{font-size:18px;margin:0} 
+  header .controls{margin-left:auto;display:flex;gap:10px;align-items:center} 
+ 
+  .toggle { 
+    padding:8px 12px;border-radius:999px;border:1px solid rgba(0,0,0,0.06); 
+    background:var(--card);cursor:pointer;font-weight:600;color:var(--accent); 
+  } 
+ 
+  main{padding:28px 18px;max-width:1100px;margin:0 auto} 
+ 
+  .intro { 
+    text-align:center;max-width:900px;margin:0 auto 22px;color:var(--muted); 
+    line-height:1.55; 
+  } 
+ 
+  /* Domain selector */ 
+  .domain-bar { 
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:18px 0 26px; 
+  } 
+  .domain-btn { 
+    padding:10px 16px;border-radius:12px;border:none;background:var(--card); 
+    cursor:pointer;box-shadow:0 4px 12px rgba(15,23,42,0.04); 
+    font-weight:600;color:var(--accent); 
+    transition:transform .18s ease,box-shadow .18s ease,background .18s; 
+  } 
+  .domain-btn:hover{transform:translateY(-3px)} 
+  .domain-btn.active{ 
+    background:linear-gradient(90deg,var(--accent),#5aa0e6); 
+    color:white;box-shadow:0 10px 30px rgba(43,108,176,0.18); 
+  } 
+ 
+  /* container for domain content */ 
+  .domain-panel{display:none;animation:fadeIn .35s ease both} 
+  .domain-panel.active{display:block} 
+ 
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}} 
+ 
+  .domain-grid{ 
+    display:grid;grid-template-columns:repeat(2,1fr);gap:18px; 
+    align-items:start; 
+  } 
+  @media (max-width:860px){ .domain-grid{grid-template-columns:1fr} } 
+ 
+  /* job card */ 
+  .job-card{ 
+    background:var(--card); 
+    border-radius:12px;padding:14px;border:1px solid rgba(15,23,42,0.04); 
+    box-shadow:0 8px 20px rgba(15,23,42,0.03); 
+    cursor:pointer;transition:transform .18s,box-shadow .18s; 
+  } 
+  .job-card:hover{transform:translateY(-6px);box-shadow:0 14px 30px rgba(15,23,42,0.06)} 
+  .job-head{display:flex;align-items:center;gap:12px} 
+  .job-icon{ 
+    width:54px;height:54px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#5aa0e6); 
+    color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px; 
+  } 
+  .job-title{font-size:18px;margin:0} 
+  .job-sub{color:var(--muted);margin-top:6px;font-size:14px} 
+ 
+  /* steps (collapsible) */ 
+  .steps{ 
+    margin-top:12px;overflow:hidden;height:0;padding:0 6px; 
+    transition:height .35s ease,opacity .3s ease,padding .3s; 
+    opacity:0; 
+  } 
+  .steps.open{ 
+    height:auto; 
+    opacity:1; 
+    padding:10px 6px 14px; 
+  } 
+ 
+  .step{ 
+    background: linear-gradient(180deg, rgba(43,108,176,0.04), transparent); 
+    border-left:4px solid var(--accent); 
+    padding:8px 12px;margin:8px 0;border-radius:8px;font-size:14px;color:var(--text); 
+  } 
+ 
+  .small{font-size:13px;color:var(--muted);margin-top:8px} 
+ 
+  footer{margin:30px 0;text-align:center;color:var(--muted);font-size:14px} 
+ 
+  /* nice transition when switching domain */ 
+  .domain-transition{animation:slideUp .36s ease} 
+  @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}} 
+</style> 
+</head> 
+<body> 
+  <header> 
+    <div class="brand"> 
+      <div class="logo">CP</div> 
+      <div> 
+        <h1>Career Path Visualizer</h1> 
+        <div style="font-size:12px;color:var(--muted)">From Curious Kid to Pro — multi-domain guide</div> 
+      </div> 
+    </div> 
+ 
+    <div class="controls"> 
+      <button class="toggle" id="themeToggle" title="Toggle dark/light">🌞</button> 
+    </div> 
+  </header> 
+ 
+  <main> 
+    <p class="intro"> 
+      Choose a domain below to explore friendly, step-by-step roadmaps for multiple careers. 
+      Each job opens a short, actionable learning path a child can follow. 
+    </p> 
+ 
+    <div class="domain-bar" role="tablist" aria-label="Domains"> 
+      <button class="domain-btn active" data-domain="technology">💻 Technology</button> 
+      <button class="domain-btn" data-domain="medicine">⚕ Medicine</button> 
+      <button class="domain-btn" data-domain="aviation">✈ Aviation</button> 
+      <button class="domain-btn" data-domain="arts">🎨 Arts</button> 
+      <button class="domain-btn" data-domain="government">🏛 Government Services</button> 
+    </div> 
+ 
+    <!-- TECHNOLOGY --> 
+    <section id="technology" class="domain-panel active domain-transition" aria-labelledby="technology"> 
+      <div style="display:flex;gap:18px;align-items:center;justify-content:center;margin-bottom:12px"> 
+        <div class="small">Domain: Technology — careers that build digital products</div> 
+      </div> 
+      <div class="domain-grid"> 
+        <div class="job-card" tabindex="0" data-job="webdev"> 
+          <div class="job-head"> 
+            <div class="job-icon">W</div> 
+            <div> 
+              <div class="job-title">Web Developer</div> 
+              <div class="job-sub">Build websites, apps and portfolios</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-webdev"> 
+            <div class="step">1. Start with HTML & CSS — create a personal "About me" page.</div> 
+            <div class="step">2. Learn JavaScript for interactivity — build quizzes or small games.</div> 
+            <div class="step">3. Learn a framework (React/Vue) & work with APIs.</div> 
+            <div class="step">4. Build projects and host them (GitHub Pages/Netlify).</div> 
+            <div class="step">5. Prepare a portfolio, apply for internships and freelance jobs.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="datasci"> 
+          <div class="job-head"> 
+            <div class="job-icon">D</div> 
+            <div> 
+              <div class="job-title">Data Scientist</div> 
+              <div class="job-sub">Discover patterns and stories in data</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-datasci"> 
+            <div class="step">1. Play with numbers — puzzles, charts and Excel basics.</div> 
+            <div class="step">2. Learn Python basics then Pandas & NumPy.</div> 
+            <div class="step">3. Learn machine learning basics (scikit-learn).</div> 
+            <div class="step">4. Work on small data projects and visualize results.</div> 
+            <div class="step">5. Build a Kaggle or GitHub portfolio and apply for analyst roles.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="ai"> 
+          <div class="job-head"> 
+            <div class="job-icon">A</div> 
+            <div> 
+              <div class="job-title">AI Engineer</div> 
+              <div class="job-sub">Create smart systems: chatbots & vision apps</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-ai"> 
+            <div class="step">1. Strengthen math & logic — probability and linear algebra basics.</div> 
+            <div class="step">2. Learn Python and machine learning concepts.</div> 
+            <div class="step">3. Explore deep learning basics (tiny neural nets).</div> 
+            <div class="step">4. Build experiments (image recognizer, simple chatbot).</div> 
+            <div class="step">5. Share projects, continue learning advanced models.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="cyber"> 
+          <div class="job-head"> 
+            <div class="job-icon">S</div> 
+            <div> 
+              <div class="job-title">Cybersecurity Specialist</div> 
+              <div class="job-sub">Protect systems and data from threats</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-cyber"> 
+            <div class="step">1. Learn safe internet habits and passwords basics.</div> 
+            <div class="step">2. Understand networking and basic Linux commands.</div> 
+            <div class="step">3. Learn Python for scripting and security tools.</div> 
+            <div class="step">4. Practice on safe labs like TryHackMe.</div> 
+            <div class="step">5. Build security projects and pursue certifications.</div> 
+          </div> 
+        </div> 
+      </div> 
+    </section> 
+ 
+    <!-- MEDICINE --> 
+    <section id="medicine" class="domain-panel domain-transition" aria-labelledby="medicine"> 
+      <div style="margin-bottom:12px;text-align:center"><div class="small">Domain: Medicine — careers that heal & care</div></div> 
+      <div class="domain-grid"> 
+        <div class="job-card" tabindex="0" data-job="doctor"> 
+          <div class="job-head"> 
+            <div class="job-icon">Dr</div> 
+            <div> 
+              <div class="job-title">Doctor (MBBS)</div> 
+              <div class="job-sub">Clinical care & patient diagnosis</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-doctor"> 
+            <div class="step">1. Focus on biology, chemistry & physics in school.</div> 
+            <div class="step">2. Prepare and clear medical entrance (NEET).</div> 
+            <div class="step">3. Complete MBBS and internship (5.5 years).</div> 
+            <div class="step">4. Choose specialization via MD/MS or practice as a general physician.</div> 
+            <div class="step">5. Keep learning through CME and clinical experience.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="nurse"> 
+          <div class="job-head"> 
+            <div class="job-icon">N</div> 
+            <div> 
+              <div class="job-title">Nurse</div> 
+              <div class="job-sub">Patient care, vital monitoring & support</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-nurse"> 
+            <div class="step">1. Develop empathy, communication and basic science understanding.</div> 
+            <div class="step">2. Pursue ANM/GNM or B.Sc Nursing program.</div> 
+            <div class="step">3. Gain clinical experience in hospitals.</div> 
+            <div class="step">4. Specialize (ICU, pediatric, community health) as needed.</div> 
+            <div class="step">5. Continue professional training and certifications.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="pharma"> 
+          <div class="job-head"> 
+            <div class="job-icon">P</div> 
+            <div> 
+              <div class="job-title">Pharmacist</div> 
+              <div class="job-sub">Medicines expertise & safe drug dispensing</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-pharma"> 
+            <div class="step">1. Strong chemistry foundation in school.</div> 
+            <div class="step">2. Complete D.Pharm or B.Pharm degree.</div> 
+            <div class="step">3. Learn about drug regulations and pharmacology.</div> 
+            <div class="step">4. Work in hospitals, pharmacies or pharma industry.</div> 
+            <div class="step">5. Pursue higher studies or specialized roles.</div> 
+          </div> 
+        </div> 
+      </div> 
+    </section> 
+ 
+    <!-- AVIATION --> 
+    <section id="aviation" class="domain-panel domain-transition" aria-labelledby="aviation"> 
+      <div style="margin-bottom:12px;text-align:center"><div class="small">Domain: Aviation — careers in the skies</div></div> 
+      <div class="domain-grid"> 
+        <div class="job-card" tabindex="0" data-job="pilot"> 
+          <div class="job-head"> 
+            <div class="job-icon">P</div> 
+            <div> 
+              <div class="job-title">Pilot (Commercial)</div> 
+              <div class="job-sub">Fly aircraft — airlines & private charters</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-pilot"> 
+            <div class="step">1. Strong physics & math basics; good eyesight and health.</div> 
+            <div class="step">2. Join a flying school and complete training hours.</div> 
+            <div class="step">3. Obtain a Commercial Pilot License (CPL) and medical fitness.</div> 
+            <div class="step">4. Gain experience as co-pilot, then upgrade ratings (ATPL).</div> 
+            <div class="step">5. Apply to airlines or private operators.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="atc"> 
+          <div class="job-head"> 
+            <div class="job-icon">ATC</div> 
+            <div> 
+              <div class="job-title">Air Traffic Controller</div> 
+              <div class="job-sub">Guide aircraft safely on ground & in air</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-atc"> 
+            <div class="step">1. Strong situational awareness & communication skills.</div> 
+            <div class="step">2. Clear relevant entrance exams (AFCAT/National ATC exams).</div> 
+            <div class="step">3. Undergo ATC training and simulation sessions.</div> 
+            <div class="step">4. Work in towers and gain operational experience.</div> 
+            <div class="step">5. Continuous training and certification updates.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="aireng"> 
+          <div class="job-head"> 
+            <div class="job-icon">AE</div> 
+            <div> 
+              <div class="job-title">Aircraft Engineer</div> 
+              <div class="job-sub">Design, maintain and repair aircraft systems</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-aireng"> 
+            <div class="step">1. Study physics, math and mechanics in school.</div> 
+            <div class="step">2. Earn an Aeronautical or Mechanical Engineering degree.</div> 
+            <div class="step">3. Gain training in aircraft maintenance (DGCA/EASA standards).</div> 
+            <div class="step">4. Work with airlines, MRO or OEMs for experience.</div> 
+            <div class="step">5. Pursue higher certifications and safety roles.</div> 
+          </div> 
+        </div> 
+      </div> 
+    </section> 
+ 
+    <!-- ARTS --> 
+    <section id="arts" class="domain-panel domain-transition" aria-labelledby="arts"> 
+      <div style="margin-bottom:12px;text-align:center"><div class="small">Domain: Arts & Creativity — design, music & storytelling</div></div> 
+      <div class="domain-grid"> 
+        <div class="job-card" tabindex="0" data-job="graphic"> 
+          <div class="job-head"> 
+            <div class="job-icon">G</div> 
+            <div> 
+              <div class="job-title">Graphic Designer</div> 
+              <div class="job-sub">Create visual designs for web & print</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-graphic"> 
+            <div class="step">1. Practice sketching, typography and color basics.</div> 
+            <div class="step">2. Learn tools: Figma, Adobe XD, or Canva.</div> 
+            <div class="step">3. Build a portfolio of posters, logos and UI screens.</div> 
+            <div class="step">4. Freelance or join design teams; get feedback.</div> 
+            <div class="step">5. Continue learning UX principles and collaboration.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="music"> 
+          <div class="job-head"> 
+            <div class="job-icon">M</div> 
+            <div> 
+              <div class="job-title">Musician</div> 
+              <div class="job-sub">Perform, compose and teach music</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-music"> 
+            <div class="step">1. Learn an instrument or vocal training from basics.</div> 
+            <div class="step">2. Practice regularly and learn music theory.</div> 
+            <div class="step">3. Record small demos and perform locally.</div> 
+            <div class="step">4. Build an online presence and collaborate with others.</div> 
+            <div class="step">5. Pursue concerts, teaching or studio work professionally.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="filmmaker"> 
+          <div class="job-head"> 
+            <div class="job-icon">F</div> 
+            <div> 
+              <div class="job-title">Filmmaker / Content Creator</div> 
+              <div class="job-sub">Tell stories with video & editing</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-filmmaker"> 
+            <div class="step">1. Learn storytelling basics and shot composition.</div> 
+            <div class="step">2. Practice shooting and editing with simple tools.</div> 
+            <div class="step">3. Create short films or consistent online content.</div> 
+            <div class="step">4. Collaborate on projects and enter local festivals.</div> 
+            <div class="step">5. Build a showreel and pursue film/media roles.</div> 
+          </div> 
+        </div> 
+      </div> 
+    </section> 
+ 
+    <!-- GOVERNMENT SERVICES --> 
+    <section id="government" class="domain-panel domain-transition" aria-labelledby="government"> 
+      <div style="margin-bottom:12px;text-align:center"><div class="small">Domain: Government Services — public service & stable careers</div></div> 
+      <div class="domain-grid"> 
+        <div class="job-card" tabindex="0" data-job="ias"> 
+          <div class="job-head"> 
+            <div class="job-icon">I</div> 
+            <div> 
+              <div class="job-title">Civil Services (IAS/IPS)</div> 
+              <div class="job-sub">Policy, administration & public leadership</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-ias"> 
+            <div class="step">1. Strong foundation in History, Polity & Current Affairs.</div> 
+            <div class="step">2. Prepare for UPSC prelims & mains with consistent study.</div> 
+            <div class="step">3. Practice answer-writing and interview skills.</div> 
+            <div class="step">4. Clear UPSC stages to enter services and train.</div> 
+            <div class="step">5. Continue learning administration ethics and public policy.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="bank"> 
+          <div class="job-head"> 
+            <div class="job-icon">B</div> 
+            <div> 
+              <div class="job-title">Banking Officer (PO)</div> 
+              <div class="job-sub">Bank operations, customer & credit roles</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-bank"> 
+            <div class="step">1. Build aptitude & reasoning in school/college.</div> 
+            <div class="step">2. Prepare and appear for IBPS/SBI/Bank exams.</div> 
+            <div class="step">3. Clear mains & interview to join as PO.</div> 
+            <div class="step">4. Training and rotational roles in branches.</div> 
+            <div class="step">5. Grow into specialized banking & finance positions.</div> 
+          </div> 
+        </div> 
+ 
+        <div class="job-card" tabindex="0" data-job="railways"> 
+          <div class="job-head"> 
+            <div class="job-icon">R</div> 
+            <div> 
+              <div class="job-title">Railways & PSU Roles</div> 
+              <div class="job-sub">Technical, managerial and clerical government jobs</div> 
+            </div> 
+          </div> 
+          <div class="steps" id="steps-railways"> 
+            <div class="step">1. Identify exam & eligibility (RRB, PSC, PSU notifications).</div> 
+            <div class="step">2. Prepare for the specific aptitude/technical test.</div> 
+            <div class="step">3. Attend interviews and medical/training phases.</div> 
+            <div class="step">4. Begin service and learn on the job.</div> 
+            <div class="step">5. Stabilize career and upgrade skills for promotions.</div> 
+          </div> 
+        </div> 
+      </div> 
+    </section> 
+ 
+    <footer>Built with ❤ — expand this project with more careers any time</footer> 
+  </main> 
+ 
+<script> 
+  // Theme toggle 
+  const themeToggle = document.getElementById('themeToggle'); 
+  themeToggle.addEventListener('click', () => { 
+    document.body.classList.toggle('dark'); 
+    themeToggle.textContent = document.body.classList.contains('dark') ? '🌙' : '🌞'; 
+  }); 
+ 
+  // Domain switching 
+  const domainButtons = document.querySelectorAll('.domain-btn'); 
+  const panels = document.querySelectorAll('.domain-panel'); 
+ 
+  domainButtons.forEach(btn => { 
+    btn.addEventListener('click', () => { 
+      domainButtons.forEach(b=>b.classList.remove('active')); 
+      btn.classList.add('active'); 
+      const domain = btn.getAttribute('data-domain'); 
+ 
+      panels.forEach(p => { 
+        p.classList.remove('active'); 
+        // small delay to make transition smoother 
+        if (p.id === domain) { 
+          setTimeout(()=> p.classList.add('active','domain-transition'), 50); 
+        } 
+      }); 
+ 
+      // close any open steps when switching domain 
+      document.querySelectorAll('.steps.open').forEach(s => closeSteps(s)); 
+    }); 
+  }); 
+ 
+  // Toggle steps with smooth height animation (only one open at time) 
+  function openSteps(el){ 
+    el.classList.add('open'); 
+    // set explicit height for smooth transition 
+    const height = el.scrollHeight + 'px'; 
+    el.style.height = height; 
+    setTimeout(()=> { el.style.height = 'auto'; }, 350); 
+  } 
+  function closeSteps(el){ 
+    el.style.height = el.scrollHeight + 'px'; 
+    requestAnimationFrame(()=> { 
+      el.style.height = '0px'; 
+      el.classList.remove('open'); 
+    }); 
+  } 
+ 
+  // Attach click handlers to job cards 
+  document.querySelectorAll('.job-card').forEach(card => { 
+    card.addEventListener('click', () => { 
+      const steps = card.querySelector('.steps'); 
+      if (!steps) return; 
+ 
+      const currentlyOpen = document.querySelector('.steps.open'); 
+      if (currentlyOpen && currentlyOpen !== steps) { 
+        closeSteps(currentlyOpen); 
+      } 
+      if (steps.classList.contains('open')) { 
+        closeSteps(steps); 
+      } else { 
+        openSteps(steps); 
+        // scroll into view for small screens 
+        setTimeout(()=> { 
+          const rect = card.getBoundingClientRect(); 
+          if (rect.top < 0 || rect.bottom > window.innerHeight) { 
+            card.scrollIntoView({behavior:'smooth',block:'center'}); 
+          } 
+        }, 380); 
+      } 
+    }); 
+ 
+    // keyboard accessibility: enter/space toggles 
+    card.addEventListener('keydown', (e) => { 
+      if (e.key === 'Enter' || e.key === ' ') { 
+        e.preventDefault(); 
+        card.click(); 
+      } 
+    }); 
+  }); 
+ 
+  // Close any open steps when clicking outside 
+  document.addEventListener('click', (e) => { 
+    const isCard = e.target.closest('.job-card'); 
+    if (!isCard) { 
+      const open = document.querySelector('.steps.open'); 
+      if (open) closeSteps(open); 
+    } 
+  }); 
+</script> 
+</body> 
+</html>
