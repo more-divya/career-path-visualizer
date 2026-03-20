@@ -30,4 +30,4 @@ The main objective of this project is to guide students and beginners in choosin
 ## ▶️ How to Run the Project
 1. Clone the repository:
 ```bash
-git clone https:https:github.com//more-divya.github.io/career-path-visualizer/
+git clone https:github.com//more-divya.github.io/career-path-visualizer/
